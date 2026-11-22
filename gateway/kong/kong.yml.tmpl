@@ -1,0 +1,106 @@
+# Kong declarative configuration (DB-less mode).
+# ${BILLING_API_URL}, ${JWT_SECRET} and ${GATEWAY_SECRET} are filled in by entrypoint.sh at container start,
+# so the same file is used locally (docker compose) and on Azure Container Apps.
+_format_version: "3.0"
+_transform: true
+
+services:
+  - name: billing-api-v1
+    url: ${BILLING_API_URL}
+    connect_timeout: 5000
+    read_timeout: 15000
+    retries: 2
+    routes:
+      # ---------------- public routes ----------------
+      - name: auth-login
+        paths: ["/api/v1/auth/login"]
+        methods: [POST]
+        strip_path: false
+        plugins:
+          - name: rate-limiting       # slow down password guessing
+            config: { minute: 10, limit_by: ip, policy: local }
+
+      - name: query-bill
+        paths: ["~/api/v1/bills$"]   # exact match, so /bills/detailed is not caught here
+        methods: [GET]
+        strip_path: false
+        plugins:
+          - name: rate-limiting
+            config: { minute: 30, hour: 300, limit_by: ip, policy: local }
+
+      - name: api-docs
+        paths: ["/docs", "/openapi.json", "/health"]
+        methods: [GET]
+        strip_path: false
+
+      # ---------------- protected routes (JWT) ----------------
+      - name: query-bill-detailed
+        paths: ["/api/v1/bills/detailed"]
+        methods: [GET]
+        strip_path: false
+        plugins:
+          - name: jwt
+            config:
+              key_claim_name: iss
+              claims_to_verify: [exp]
+              header_names: [authorization]
+          - name: rate-limiting       # keyed by the caller's token, not the client IP
+            config: { minute: 60, limit_by: header, header_name: Authorization, policy: local }
+
+      - name: pay-bill
+        paths: ["/api/v1/payments"]
+        methods: [POST]
+        strip_path: false
+        plugins:
+          - name: jwt
+            config:
+              key_claim_name: iss
+              claims_to_verify: [exp]
+              header_names: [authorization]
+          - name: rate-limiting       # keyed by the caller's token, not the client IP
+            config: { minute: 60, limit_by: header, header_name: Authorization, policy: local }
+
+      - name: calculate-bill
+        paths: ["/api/v1/bills/calculate"]
+        methods: [POST]
+        strip_path: false
+        plugins:
+          - name: jwt
+            config:
+              key_claim_name: iss
+              claims_to_verify: [exp]
+              header_names: [authorization]
+          - name: rate-limiting       # keyed by the caller's token, not the client IP
+            config: { minute: 60, limit_by: header, header_name: Authorization, policy: local }
+
+      - name: add-usage
+        paths: ["/api/v1/usage"]
+        methods: [POST]
+        strip_path: false
+        plugins:
+          - name: jwt
+            config:
+              key_claim_name: iss
+              claims_to_verify: [exp]
+              header_names: [authorization]
+          - name: rate-limiting       # keyed by the caller's token, not the client IP
+            config: { minute: 60, limit_by: header, header_name: Authorization, policy: local }
+
+# Tokens are issued by the billing API with iss=billing-api and signed with JWT_SECRET.
+# Kong finds this credential through the iss claim and verifies signature + expiry.
+consumers:
+  - username: billing-api-issuer
+    jwt_secrets:
+      - key: billing-api
+        algorithm: HS256
+        secret: "${JWT_SECRET}"
+
+plugins:
+  - name: request-transformer   # proves to the API that the call came through the gateway
+    config:
+      add:
+        headers: ["X-Gateway-Secret:${GATEWAY_SECRET}"]
+  - name: correlation-id
+    config: { header_name: X-Request-ID, generator: uuid, echo_downstream: true }
+  - name: cors
+    config: { origins: ["*"], methods: [GET, POST, OPTIONS], headers: [Authorization, Content-Type] }

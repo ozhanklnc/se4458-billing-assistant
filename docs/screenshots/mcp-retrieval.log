@@ -1,0 +1,20 @@
+tool: search_billing_documentation  schema: {'type': 'object', 'properties': {'query': {'title': 'Query', 'type': 'string'}, 'top_k': {'default': 3, 'title': 'Top K', 'type': 'integer'}}, 'required': ['query'], 'title': 'search_billing_documentationArguments'}
+
+query: How much does extra internet cost?
+  [  8.47] Section 4.2 – Extra data charges
+          Data used above the 20 GB allowance is charged as extra internet. Each started additional block of 10 GB (10,000 MB) costs $10. There is no per-MB price: one ex ...
+  [  5.38] Section 4.1 – Base data package
+          The internet package costs a flat $50 per month and includes up to 20 GB (20,000 MB) of mobile data. The $50 base package fee is charged every month, even if le ...
+
+query: Can I pay my bill in parts?
+  [  6.44] Section 6.2 – Partial payments
+          Partial payments are accepted. A bill can be paid in several parts until the remaining balance reaches zero. The bill status is UNPAID before any payment, PARTI ...
+  [  4.78] Section 6.3 – Overpayment
+          A payment larger than the remaining balance is rejected. Pay at most the remaining balance. ...
+
+query: How do I dispute a wrong charge on my bill?
+  [  9.99] Section 8.1 – How to dispute a charge
+          A subscriber who believes a charge is wrong can open a billing dispute within 60 days of the bill date through customer support. The dispute should include the  ...
+  [  4.87] Section 8.2 – During a dispute
+          Only the disputed amount is put on hold. The undisputed part of the bill must still be paid by the due date to avoid late fees. ...
+

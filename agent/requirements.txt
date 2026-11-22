@@ -1,0 +1,7 @@
+openai==3.57.0
+mcp==2.3.0
+httpx==0.28.1
+python-dotenv==1.*
+
+# tests
+pytest==8.*
