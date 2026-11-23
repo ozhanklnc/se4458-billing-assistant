@@ -13,6 +13,10 @@ call the **Billing REST API through the API gateway**, or both.
 | AI agent | Python, OpenAI-compatible chat completions with tools, MCP client | CLI on the user's machine |
 | LLM | Gemini Flash via the OpenAI-compatible endpoint (any OpenAI-compatible model works) | Google AI Studio |
 
+> **Demo video:** [docs/video/demo.mp4](docs/video/demo.mp4) (3:37, Turkish narration). It shows the
+> README, Swagger on Azure, the gateway checks, the agent scenarios (MCP-only, API-only, combined,
+> confirmed payment) and the unit test run.
+
 > **Deployed on Azure**
 > - API Gateway: https://gateway.yellowsmoke-193d061f.germanywestcentral.azurecontainerapps.io
 > - Swagger UI (through the gateway): https://gateway.yellowsmoke-193d061f.germanywestcentral.azurecontainerapps.io/docs
